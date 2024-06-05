@@ -1,0 +1,31 @@
+{
+  "name": "fit-match-db",
+  "version": "1.0.0",
+  "description": "Sportive match application API with MySQL and Docker",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "start:build": "npx --package typescript tsc -p .",
+    "start": "nodemon src/server.ts",
+    "start:prod": "npx --package typescript tsc -p . && NODE_ENV=prod node dist/index"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/multer": "^1.4.11",
+    "@types/node": "^20.12.12",
+    "prisma": "^5.11.0",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.4.3"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.11.0",
+    "axios": "^1.6.8",
+    "body-parser": "^1.20.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.0",
+    "multer": "^1.4.5-lts.1",
+    "nodemon": "^3.1.0"
+  }
+}

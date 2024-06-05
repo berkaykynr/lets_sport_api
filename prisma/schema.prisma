@@ -1,0 +1,55 @@
+// schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String  @id @unique @default(cuid())
+  first_name    String
+  last_name     String
+  username      String  @unique
+  password      String
+  email         String  @unique
+  phone         String? @unique
+  address       String?
+  branches      String?
+  sex           String?
+  profile_photo String?
+  photos        String?
+  is_validated  Boolean @default(false)
+  is_premium    Boolean @default(false)
+}
+
+model TurkeyAddress {
+  id   String @id @unique @default(cuid())
+  city Json?
+}
+
+enum Branches {
+  Football
+  Volleyball
+  Basketball
+  Handball
+  Fitness
+  Athletics
+  Judo
+  Swimming
+  Wrestling
+  Taekwondo
+  Tennis
+  Karate
+  Archery
+  Boxing
+  Badminton
+  Yoga
+  MuayThai
+  Fencing
+  Aikido
+  Trekkig
+}
