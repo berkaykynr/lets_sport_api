@@ -2,10 +2,7 @@ import { Request, Response } from 'express';
 import axios from 'axios';
 import prisma from '../lib/prisma';
 
-const createUser = async (req: any, res: any) => {
-  console.log(req.body, ' req.body');
-  console.log(req?.files, ' req.files');
-
+const createUser = async (req: Request, res: any) => {
   try {
     const user = await prisma.user.create({
       data: {
@@ -26,9 +23,8 @@ const createUser = async (req: any, res: any) => {
     res.send(user);
   } catch (err) {
     console.log(err);
+    res.status(500).send(err);
   }
-
-  res.send('tamam');
 };
 
 async function uploadPhoto(req: any, res: any) {

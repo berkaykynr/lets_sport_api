@@ -2,7 +2,6 @@ import express from 'express';
 import UserController from '../controllers/user.controller';
 import fs from 'fs';
 import path from 'path';
-import bodyParser from 'body-parser';
 
 const router = express.Router();
 
@@ -10,7 +9,6 @@ const multer = require('multer');
 
 const storage = multer.diskStorage({
   destination: function (req: any, file: any, cb: any) {
-    console.log(req.body);
     const uploadPath = path.join(
       'uploads',
       req.body.username ? req.body.username : 'unnamed'
