@@ -21,4 +21,6 @@ async function main() {
   });
 }
 
+//BERKAY KAYNAR UYGULAMASIDIR
+
 main();
