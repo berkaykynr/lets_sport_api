@@ -4,9 +4,10 @@ import prisma from '../lib/prisma';
 const fs = require('fs');
 const bcrypt = require('bcrypt');
 import path from 'path';
+import { generateRandomCode } from '../util/generateCode';
 const jwt = require('jsonwebtoken');
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret';
-
+var nodemailer = require('nodemailer');
 const createUser = async (req: Request, res: any) => {
   try {
     const hashedPassword = await bcrypt.hash(req.body.password, 10);
@@ -160,6 +161,102 @@ async function getUserPhoto(req: Request, res: Response) {
   }
 }
 
+async function sendResetPasswordCode(req: Request, res: Response) {
+  try {
+    const email = req.body.email;
+    console.log(email);
+    const user = await prisma.user.findUnique({
+      where: {
+        email: email,
+      },
+    });
+    if (user) {
+      var transporter = nodemailer.createTransport({
+        host: 'mail.kurumsaleposta.com',
+        port: 587, // Genellikle 587 veya 465 portu kullanılır
+        secure: false, // true for 465, false for other ports
+        auth: {
+          user: 'info@letssport.net',
+          pass: 'LEtssport_24!!',
+        },
+        tls: {
+          rejectUnauthorized: false, // Sertifika doğrulamasını atla (güvenli değil)
+        },
+      });
+      const code = generateRandomCode();
+
+      var mailOptions = {
+        from: 'info@letssport.net',
+        to: 'berkay.kaynar65@gmail.com',
+        subject: `Let's Sport Reset Password`,
+        text: `Al sana kod: ${code}`,
+      };
+
+      const updateUser = await prisma.user.update({
+        where: {
+          email: email,
+        },
+        data: {
+          resetPasswordCode: code,
+        },
+      });
+
+      transporter.sendMail(mailOptions, function (error: any, info: any) {
+        if (error) {
+          console.log(error);
+          res.status(500).send('Error while sending mail');
+        } else {
+          console.log('Email sent: ' + info.response);
+          res.status(200).send('ok');
+        }
+      });
+    } else res.status(404).send('User not found');
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err });
+  }
+}
+
+async function checkResetPasswordCode(req: Request, res: Response) {
+  try {
+    const code = req.body.code;
+    const email = req.body.email;
+    const user = await prisma.user.findUnique({
+      where: {
+        email: email,
+      },
+    });
+    if (user?.resetPasswordCode == code) {
+      res.status(200).send('True Code');
+    } else {
+      res.status(404).send('Code is incorrect');
+    }
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err });
+  }
+}
+async function resetPassword(req: Request, res: Response) {
+  try {
+    const hashedPassword = await bcrypt.hash(req.body.password, 10);
+    const email = req.body.email;
+
+    const updateUser = await prisma.user.update({
+      where: {
+        email: email,
+      },
+      data: {
+        password: hashedPassword,
+      },
+    });
+
+    res.status(200).send('Password changed');
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err });
+  }
+}
+
 export default {
   createUser,
   getUserById,
@@ -168,4 +265,7 @@ export default {
   login,
   getUserByEmail,
   getUserPhoto,
+  sendResetPasswordCode,
+  checkResetPasswordCode,
+  resetPassword,
 };

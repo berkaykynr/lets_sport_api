@@ -12,14 +12,18 @@ const multer = require('multer');
 
 const storage = multer.diskStorage({
   destination: function (req: any, file: any, cb: any) {
+    console.log('userrnamee :  ', req.body.username);
+
     const uploadPath = path.join(
       'uploads',
       req.body.username ? req.body.username : 'undefined'
     );
+
     if (!fs.existsSync(uploadPath))
       fs.mkdirSync(uploadPath, { recursive: true });
     cb(null, uploadPath);
   },
+
   filename: function (req: any, file: any, cb: any) {
     cb(null, req.body.username + '-' + Date.now() + '-' + file.originalname);
   },
@@ -54,6 +58,9 @@ router.post(
   authenticateToken,
   UserController.getUserByEmail
 );
+router.post('/sendResetPasswordCode', UserController.sendResetPasswordCode);
+router.post('/checkResetPasswordCode', UserController.checkResetPasswordCode);
+router.post('/resetPassword', UserController.resetPassword);
 router.get(
   '/getUserPhoto:path',
   // authenticateToken
