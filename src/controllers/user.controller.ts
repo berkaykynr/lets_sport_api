@@ -5,6 +5,7 @@ const fs = require('fs');
 const bcrypt = require('bcrypt');
 import path from 'path';
 import { generateRandomCode } from '../util/generateCode';
+import { htmlFunc } from '../util/mailHtml';
 const jwt = require('jsonwebtoken');
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret';
 var nodemailer = require('nodemailer');
@@ -189,7 +190,8 @@ async function sendResetPasswordCode(req: Request, res: Response) {
         from: 'info@letssport.net',
         to: 'berkay.kaynar65@gmail.com',
         subject: `Let's Sport Reset Password`,
-        text: `Al sana kod: ${code}`,
+        // text: `Al sana kod: ${code}`,
+        html: htmlFunc(code),
       };
 
       const updateUser = await prisma.user.update({
@@ -257,6 +259,57 @@ async function resetPassword(req: Request, res: Response) {
   }
 }
 
+async function checkUniqueUsername(req: Request, res: Response) {
+  try {
+    const username = req.body.username;
+
+    const user = await prisma.user.findUnique({
+      where: {
+        username: username,
+      },
+    });
+
+    if (user) res.status(201).send('Username taken');
+    else res.status(200).send('Username available');
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err });
+  }
+}
+async function checkUniqueEmail(req: Request, res: Response) {
+  try {
+    const email = req.body.email;
+
+    const user = await prisma.user.findUnique({
+      where: {
+        email: email,
+      },
+    });
+
+    if (user) res.status(201).send('Email taken');
+    else res.status(200).send('Email available');
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err });
+  }
+}
+async function checkUniquePhone(req: Request, res: Response) {
+  try {
+    const phone = req.body.phone;
+
+    const user = await prisma.user.findUnique({
+      where: {
+        phone: phone,
+      },
+    });
+
+    if (user) res.status(201).send('Phone taken');
+    else res.status(200).send('Phone available');
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err });
+  }
+}
 export default {
   createUser,
   getUserById,
@@ -268,4 +321,7 @@ export default {
   sendResetPasswordCode,
   checkResetPasswordCode,
   resetPassword,
+  checkUniqueEmail,
+  checkUniqueUsername,
+  checkUniquePhone,
 };

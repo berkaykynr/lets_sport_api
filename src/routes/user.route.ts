@@ -61,6 +61,9 @@ router.post(
 router.post('/sendResetPasswordCode', UserController.sendResetPasswordCode);
 router.post('/checkResetPasswordCode', UserController.checkResetPasswordCode);
 router.post('/resetPassword', UserController.resetPassword);
+router.post('/checkUniqueUsername', UserController.checkUniqueUsername);
+router.post('/checkUniquePhone', UserController.checkUniquePhone);
+router.post('/checkUniqueEmail', UserController.checkUniqueEmail);
 router.get(
   '/getUserPhoto:path',
   // authenticateToken
