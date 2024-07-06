@@ -130,14 +130,14 @@ async function getUserByEmail(req: Request, res: Response) {
 }
 
 async function getUserPhoto(req: Request, res: Response) {
-  console.info(
-    `[${new Date().toLocaleString()}] Incoming ${req.method} ${
-      req.originalUrl
-    } Request from ${req.rawHeaders[0]} ${req.rawHeaders[1]} `
-  );
+  // console.info(
+  //   `[${new Date().toLocaleString()}] Incoming ${req.method} ${
+  //     req.originalUrl
+  //   } Request from ${req.rawHeaders[0]} ${req.rawHeaders[1]} `
+  // );
   try {
     const reqPath = req.params.path;
-    console.error(req.params.path, 'pat');
+    // console.error(req.params.path, 'pat');
     const reqPathSplit = reqPath.split('-');
     const photoPath = path.join('uploads', reqPathSplit[0]);
     const options = {

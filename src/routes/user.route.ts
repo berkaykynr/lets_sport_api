@@ -64,11 +64,7 @@ router.post('/resetPassword', UserController.resetPassword);
 router.post('/checkUniqueUsername', UserController.checkUniqueUsername);
 router.post('/checkUniquePhone', UserController.checkUniquePhone);
 router.post('/checkUniqueEmail', UserController.checkUniqueEmail);
-router.get(
-  '/getUserPhoto:path',
-  // authenticateToken
-  UserController.getUserPhoto
-);
+router.get('/getUserPhoto:path', UserController.getUserPhoto);
 router.post('/login', UserController.login);
 
 export default router;

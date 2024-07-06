@@ -22,10 +22,12 @@ model User {
   sex               String?
   profile_photo     String?
   photos            String?
+  rate              Int?
   birthyear         String?
   resetPasswordCode String?
   is_validated      Boolean @default(false)
   is_premium        Boolean @default(false)
+  events            Event[]
 }
 
 model TurkeyAddress {
@@ -54,4 +56,19 @@ enum Branches {
   Fencing
   Aikido
   Trekkig
+}
+
+model Event {
+  id           String    @id @unique @default(cuid())
+  eventDate    DateTime
+  updatedAt    DateTime? @updatedAt
+  createdAt    DateTime? @default(now())
+  participants Json?
+  owner        User      @relation(fields: [userId], references: [id])
+  latitude     String
+  longitude    String
+  address      String
+  branch       String
+  description  String?
+  userId       String
 }
