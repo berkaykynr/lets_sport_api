@@ -12,7 +12,6 @@ var nodemailer = require('nodemailer');
 const createUser = async (req: Request, res: any) => {
   try {
     const hashedPassword = await bcrypt.hash(req.body.password, 10);
-
     const user = await prisma.user.create({
       data: {
         first_name: req.body.first_name,
@@ -28,7 +27,6 @@ const createUser = async (req: Request, res: any) => {
         photos: req.body.photos,
       },
     });
-
     res.send(user);
   } catch (err) {
     console.error(err);
@@ -43,6 +41,9 @@ async function uploadPhoto(req: any, res: any) {
     } Request from ${req.rawHeaders[0]} ${req.rawHeaders[1]} `
   );
   try {
+    console.log(req.files['photo'], ": req.files['photo']");
+    console.log(req.files, ': req.files');
+    console.log(req.files['photo'][0], ": req.files['photo'][0]");
     res.send(req.files['photo'][0].filename);
   } catch (err) {
     console.error('Error while upload photo: ', err);
@@ -138,6 +139,7 @@ async function getUserPhoto(req: Request, res: Response) {
   try {
     const reqPath = req.params.path;
     // console.error(req.params.path, 'pat');
+    console.log(reqPath);
     const reqPathSplit = reqPath.split('-');
     const photoPath = path.join('uploads', reqPathSplit[0]);
     const options = {

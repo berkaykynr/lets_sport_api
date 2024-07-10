@@ -8,7 +8,7 @@ const cors = require('cors');
 async function main() {
   app.use(cors());
   app.use(express.json());
-  // app.use(express.urlencoded());
+  app.use(express.urlencoded());
 
   app.use('/api/user', UserRouter);
   app.use('/api/event', EventRouter);
