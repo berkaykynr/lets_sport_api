@@ -22,7 +22,7 @@ model User {
   sex               String?
   profile_photo     String?
   photos            String?
-  rate              Int?
+  rate              Int?    @default(0)
   birthyear         String?
   resetPasswordCode String?
   is_validated      Boolean @default(false)
@@ -64,11 +64,11 @@ model Event {
   updatedAt    DateTime? @updatedAt
   createdAt    DateTime? @default(now())
   participants Json?
-  owner        User      @relation(fields: [userId], references: [id])
+  owner        User      @relation(fields: [username], references: [id])
   latitude     String
   longitude    String
   address      String
   branch       String
   description  String?
-  userId       String
+  username     String
 }

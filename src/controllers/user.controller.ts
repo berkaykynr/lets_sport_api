@@ -146,7 +146,6 @@ async function getUserPhoto(req: Request, res: Response) {
       if (err) {
         console.error('Error sending file:', err);
       } else {
-        console.log(reqPath, ': REQPATH');
       }
     });
   } catch (err) {
