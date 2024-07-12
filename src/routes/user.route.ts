@@ -12,11 +12,9 @@ const multer = require('multer');
 
 const storage = multer.diskStorage({
   destination: function (req: any, file: any, cb: any) {
-    console.log('userrnamee :  ', req.body.username);
-
     const uploadPath = path.join(
       'uploads',
-      req.body.username ? req.body.username : 'undefined'
+      req.query.username ? req.query.username : 'undefined'
     );
 
     if (!fs.existsSync(uploadPath))
@@ -25,7 +23,7 @@ const storage = multer.diskStorage({
   },
 
   filename: function (req: any, file: any, cb: any) {
-    cb(null, req.body.username + '-' + Date.now() + '-' + file.originalname);
+    cb(null, req.query.username + '-' + Date.now() + '-' + file.originalname);
   },
 });
 

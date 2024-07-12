@@ -41,9 +41,6 @@ async function uploadPhoto(req: any, res: any) {
     } Request from ${req.rawHeaders[0]} ${req.rawHeaders[1]} `
   );
   try {
-    console.log(req.files['photo'], ": req.files['photo']");
-    console.log(req.files, ': req.files');
-    console.log(req.files['photo'][0], ": req.files['photo'][0]");
     res.send(req.files['photo'][0].filename);
   } catch (err) {
     console.error('Error while upload photo: ', err);
@@ -139,7 +136,6 @@ async function getUserPhoto(req: Request, res: Response) {
   try {
     const reqPath = req.params.path;
     // console.error(req.params.path, 'pat');
-    console.log(reqPath);
     const reqPathSplit = reqPath.split('-');
     const photoPath = path.join('uploads', reqPathSplit[0]);
     const options = {
@@ -150,14 +146,9 @@ async function getUserPhoto(req: Request, res: Response) {
       if (err) {
         console.error('Error sending file:', err);
       } else {
+        console.log(reqPath, ': REQPATH');
       }
     });
-    // res.download(photoPath, (err) => {
-    //   if (err) {
-    //     console.error('File download failed:', err);
-    //     res.status(500).send('Error downloading file');
-    //   }
-    // });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: err });
