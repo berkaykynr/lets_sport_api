@@ -26,5 +26,10 @@ router.post(
   authenticateToken,
   EventController.fetchEventUser
 );
+router.post(
+  '/fetchEventDetail',
+  authenticateToken,
+  EventController.fetchEventDetail
+);
 
 export default router;

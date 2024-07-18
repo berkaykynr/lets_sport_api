@@ -52,11 +52,24 @@ async function fetchEventUser(req: any, res: Response) {
   try {
     const user = await prisma.user.findUnique({
       where: {
-        id: req.user.userId,
+        id: req.body.id,
       },
     });
-
     if (user) res.status(200).send(user);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send(err);
+  }
+}
+
+async function fetchEventDetail(req: any, res: Response) {
+  try {
+    const event = await prisma.event.findUnique({
+      where: {
+        id: req.body.id,
+      },
+    });
+    if (event) res.status(200).send(event);
   } catch (err) {
     console.error(err);
     res.status(500).send(err);
@@ -67,4 +80,5 @@ export default {
   createEvent,
   fetchEvents,
   fetchEventUser,
+  fetchEventDetail,
 };
