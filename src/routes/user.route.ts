@@ -2,7 +2,6 @@ import express from 'express';
 import UserController from '../controllers/user.controller';
 import fs from 'fs';
 import path from 'path';
-import userController from '../controllers/user.controller';
 const jwt = require('jsonwebtoken');
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret';
 
