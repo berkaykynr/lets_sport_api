@@ -43,19 +43,9 @@ const upload = multer({ storage: storage });
 const cpUploadPhoto = upload.fields([{ name: 'photo', maxCount: 1 }]);
 
 router.post(
-  '/getConversationId',
-  authenticateToken,
-  MessageController.getConversationId
-);
-router.post(
   '/getReceiverUser',
   authenticateToken,
   MessageController.getReceiverUser
-);
-router.post(
-  '/fetchMessages',
-  authenticateToken,
-  MessageController.fetchMessages
 );
 
 export default router;

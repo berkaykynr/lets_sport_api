@@ -1,45 +1,12 @@
 import { Request, Response } from 'express';
 import prisma from '../lib/prisma';
-
-async function getConversationId(req: Request, res: Response) {
-  try {
-    const { senderId, receiverId }: { senderId: string; receiverId: string } =
-      req.body;
-
-    if (receiverId && senderId) {
-      const conversation = await prisma.conversation.findFirst({
-        where: {
-          AND: [{ receiverId: receiverId }, { senderId: senderId }],
-        },
-      });
-
-      if (conversation) {
-        res.status(200).json({ conversationId: conversation.id });
-      } else {
-        const conversation = await prisma.conversation.create({
-          data: {
-            senderId: senderId,
-            receiverId: receiverId,
-            users: {
-              connect: [{ id: senderId }, { id: receiverId }],
-            },
-          },
-        });
-
-        res.status(200).json({ conversationId: conversation.id });
-      }
-    } else {
-      res.status(400).json({ message: 'senderId and receiverId are required' });
-    }
-  } catch (err) {
-    console.error(err);
-    res.status(500).send(err);
-  }
-}
+import { io } from '../server';
+import { Server, Socket } from 'socket.io';
 
 async function getReceiverUser(req: Request, res: Response) {
   try {
     const { receiverId } = req.body;
+
     const user = await prisma.user.findUnique({
       where: {
         id: receiverId,
@@ -53,37 +20,36 @@ async function getReceiverUser(req: Request, res: Response) {
   }
 }
 
-async function fetchMessages(req: Request, res: Response) {
-  try {
-    const {
-      conversationId,
-      page,
-      limit,
-    }: { conversationId: string; page: number; limit: number } = req.body;
+function messageSocket(io: Server, socket: Socket) {
+  socket.on('join', async ({ userId }: { userId: string }) => {
+    console.log(`${userId} joined conversation`);
+  });
 
-    if (!conversationId) {
-      return res.status(400).json({ message: 'conversationId is required' });
+  socket.on('sendMessage', async (messageData: any) => {
+    const { text, senderId, receiverId, conversationId } = messageData;
+    try {
+      const message = await prisma.message.create({
+        data: {
+          text,
+          senderId,
+          receiverId,
+          conversationId,
+          seen: false,
+        },
+      });
+
+      io.to(conversationId).emit('receiveMessage', message);
+    } catch (error) {
+      console.error('Error creating message:', error);
     }
+  });
 
-    const pageNumber = page || 1;
-    const limitNumber = limit || 10;
-    const skip = (pageNumber - 1) * limitNumber;
-
-    const messages = await prisma.message.findMany({
-      where: { conversationId: conversationId },
-      orderBy: { createdAt: 'desc' },
-      skip: skip,
-      take: limitNumber,
-    });
-    res.status(200).json(messages);
-  } catch (err) {
-    console.error(err);
-    res.status(500).send(err);
-  }
+  socket.on('disconnect', () => {
+    console.log('user disconnected', socket.id);
+  });
 }
 
 export default {
-  getConversationId,
   getReceiverUser,
-  fetchMessages,
+  messageSocket,
 };

@@ -3,6 +3,8 @@ import UserRouter from './routes/user.route';
 import EventRouter from './routes/event.route';
 import MessagesRouter from './routes/messages.route';
 import prisma from './lib/prisma';
+import messagesController from './controllers/messages.controller';
+import { Socket } from 'socket.io';
 const http = require('http');
 const { Server } = require('socket.io');
 
@@ -11,7 +13,7 @@ const port = 8080;
 const cors = require('cors');
 
 const server = http.createServer(app);
-const io = new Server(server, {
+export const io = new Server(server, {
   cors: {
     origin: '*',
     methods: ['GET', 'POST'],
@@ -31,42 +33,11 @@ async function main() {
     res.status(404).json({ error: `Route ${req.originalUrl} not found` });
   });
 
-  io.on('connection', (socket: any) => {
+  io.on('connection', (socket: Socket) => {
     console.log('a user connected', socket.id);
-
-    socket.on(
-      'join',
-      async ({
-        conversationId,
-        userId,
-      }: {
-        conversationId: any;
-        userId: any;
-      }) => {
-        socket.join(conversationId);
-        console.log(`${userId} joined conversation ${conversationId}`);
-      }
-    );
-
-    socket.on('sendMessage', async (messageData: any) => {
-      const { text, senderId, receiverId, conversationId } = messageData;
-      const message = await prisma.message.create({
-        data: {
-          text,
-          senderId,
-          receiverId,
-          conversationId,
-          seen: false,
-        },
-      });
-
-      io.to(conversationId).emit('receiveMessage', message);
-    });
-
-    socket.on('disconnect', () => {
-      console.log('user disconnected', socket.id);
-    });
+    messagesController.messageSocket(io, socket);
   });
+
   io.listen(3000);
   app.listen(port, () => {
     console.log(`Server is listening on port ${port}`);
