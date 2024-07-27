@@ -47,5 +47,6 @@ router.post(
   authenticateToken,
   MessageController.getReceiverUser
 );
+router.post('/markAsSeen', authenticateToken, MessageController.markAsSeen);
 
 export default router;

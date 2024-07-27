@@ -82,5 +82,4 @@ model Message {
   senderId   String
   receiverId String
   seen       Boolean
-  userId     String?
 }
