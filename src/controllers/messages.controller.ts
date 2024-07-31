@@ -92,7 +92,7 @@ function messageSocket(io: Server, socket: Socket) {
         orderBy: {
           createdAt: 'desc',
         },
-        take: limit,
+        take: limit > 0 ? limit : 100,
         skip: offset,
       });
 
@@ -113,6 +113,106 @@ function messageSocket(io: Server, socket: Socket) {
       io.emit('messageSeen', updatedMessage);
     } catch (error) {
       console.error('Error marking message as seen:', error);
+    }
+  });
+
+  socket.on('getMessagesList', async (userId) => {
+    try {
+      const messages = await prisma.message.findMany({
+        where: {
+          OR: [{ senderId: userId }, { receiverId: userId }],
+        },
+        orderBy: {
+          createdAt: 'desc',
+        },
+        distinct: ['senderId', 'receiverId'],
+        select: {
+          id: true,
+          createdAt: true,
+          text: true,
+          image: true,
+          senderId: true,
+          receiverId: true,
+          seen: true,
+        },
+      });
+
+      const userConversations: Record<
+        string,
+        { lastMessage: any; unseenMessages: any[] }
+      > = {};
+
+      messages.forEach((message) => {
+        const otherUserId =
+          message.senderId === userId ? message.receiverId : message.senderId;
+
+        if (!userConversations[otherUserId]) {
+          userConversations[otherUserId] = {
+            lastMessage: message,
+            unseenMessages: [],
+          };
+        }
+
+        if (!message.seen && message.receiverId === userId) {
+          userConversations[otherUserId].unseenMessages.push(message);
+        } else if (message.seen && message.receiverId === userId) {
+          // Update lastMessage if necessary
+          if (
+            message.createdAt >
+            userConversations[otherUserId].lastMessage.createdAt
+          ) {
+            userConversations[otherUserId].lastMessage = message;
+          }
+        }
+      });
+
+      const userIds = Object.keys(userConversations);
+      const users = await prisma.user.findMany({
+        where: {
+          id: { in: userIds },
+        },
+        select: {
+          id: true,
+          first_name: true,
+          last_name: true,
+          profile_photo: true,
+        },
+      });
+
+      const userMap = new Map<string, any>();
+      users.forEach((user) => {
+        userMap.set(user.id, user);
+      });
+
+      const currentTime = new Date();
+      const conversationArray: any[] = userIds.map((otherUserId) => {
+        const conversation = userConversations[otherUserId];
+        const user = userMap.get(otherUserId);
+        if (!user) {
+          throw new Error(`User not found for ID: ${otherUserId}`);
+        }
+        const lastMessageTime = new Date(conversation.lastMessage.createdAt);
+        const timeDiffMinutes = Math.floor(
+          (currentTime.getTime() - lastMessageTime.getTime()) / 60000
+        );
+
+        return {
+          userId: otherUserId,
+          profilePhoto: user.profile_photo,
+          firstName: user.first_name,
+          lastName: user.last_name,
+          lastMessage: conversation.lastMessage,
+          unseenMessagesCount: conversation.unseenMessages.length,
+          lastMessageTimeDiff:
+            timeDiffMinutes < 60
+              ? `${timeDiffMinutes} minutes ago`
+              : `${Math.floor(timeDiffMinutes / 60)} hours ago`,
+        };
+      });
+
+      socket.emit('messageList', conversationArray);
+    } catch (err) {
+      console.error('Error getting message list:', err);
     }
   });
 
