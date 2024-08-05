@@ -22,15 +22,16 @@ async function getReceiverUser(req: Request, res: Response) {
 
 async function markAsSeen(req: Request, res: Response) {
   const { messageId } = req.body;
-  try {
-    const updatedMessage = await prisma.message.update({
-      where: { id: messageId },
-      data: { seen: true },
-    });
-    res.status(200).json(updatedMessage);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to mark message as seen' });
-  }
+  if (messageId)
+    try {
+      const updatedMessage = await prisma.message.update({
+        where: { id: messageId },
+        data: { seen: true },
+      });
+      res.status(200).json(updatedMessage);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to mark message as seen' });
+    }
 }
 
 function messageSocket(io: Server, socket: Socket) {
@@ -103,17 +104,18 @@ function messageSocket(io: Server, socket: Socket) {
   });
 
   socket.on('markAsSeen', async (messageId) => {
-    try {
-      const updatedMessage = await prisma.message.update({
-        where: { id: messageId },
-        data: { seen: true },
-      });
+    if (messageId)
+      try {
+        const updatedMessage = await prisma.message.update({
+          where: { id: messageId },
+          data: { seen: true },
+        });
 
-      // Mesajın görüldüğünü tüm kullanıcılarla paylaş
-      io.emit('messageSeen', updatedMessage);
-    } catch (error) {
-      console.error('Error marking message as seen:', error);
-    }
+        // Mesajın görüldüğünü tüm kullanıcılarla paylaş
+        io.emit('messageSeen', updatedMessage);
+      } catch (error) {
+        console.error('Error marking message as seen:', error);
+      }
   });
 
   socket.on('getMessagesList', async (userId) => {
