@@ -35,8 +35,8 @@ async function markAsSeen(req: Request, res: Response) {
 }
 
 function messageSocket(io: Server, socket: Socket) {
-  socket.on('join', async ({ userId }: { userId: string }) => {
-    console.log(`${userId} joined conversation`);
+  socket.on('join', async (userId) => {
+    socket.join(userId);
   });
 
   socket.on('sendMessage', async (messageData: any) => {
@@ -69,6 +69,9 @@ function messageSocket(io: Server, socket: Socket) {
         },
       });
 
+      // io.to(senderId).to(receiverId).emit('refreshConversations');
+      io.to(senderId).emit('refreshConversations');
+      io.to(receiverId).emit('refreshConversations');
       io.emit('newMessage', messages);
     } catch (error) {
       console.error('Error creating message:', error);
@@ -112,17 +115,18 @@ function messageSocket(io: Server, socket: Socket) {
         });
 
         // Mesajın görüldüğünü tüm kullanıcılarla paylaş
+        io.emit('refreshConversations');
         io.emit('messageSeen', updatedMessage);
       } catch (error) {
         console.error('Error marking message as seen:', error);
       }
   });
 
-  socket.on('getMessagesList', async (userId) => {
+  socket.on('loadConversations', async ({ senderId }) => {
     try {
       const messages = await prisma.message.findMany({
         where: {
-          OR: [{ senderId: userId }, { receiverId: userId }],
+          OR: [{ senderId }, { receiverId: senderId }],
         },
         orderBy: {
           createdAt: 'desc',
@@ -146,7 +150,7 @@ function messageSocket(io: Server, socket: Socket) {
 
       messages.forEach((message) => {
         const otherUserId =
-          message.senderId === userId ? message.receiverId : message.senderId;
+          message.senderId === senderId ? message.receiverId : message.senderId;
 
         if (!userConversations[otherUserId]) {
           userConversations[otherUserId] = {
@@ -155,9 +159,9 @@ function messageSocket(io: Server, socket: Socket) {
           };
         }
 
-        if (!message.seen && message.receiverId === userId) {
+        if (!message.seen && message.receiverId === senderId) {
           userConversations[otherUserId].unseenMessages.push(message);
-        } else if (message.seen && message.receiverId === userId) {
+        } else if (message.seen && message.receiverId === senderId) {
           // Update lastMessage if necessary
           if (
             message.createdAt >
@@ -212,9 +216,9 @@ function messageSocket(io: Server, socket: Socket) {
         };
       });
 
-      socket.emit('messageList', conversationArray);
+      socket.emit('conversationsLoaded', conversationArray);
     } catch (err) {
-      console.error('Error getting message list:', err);
+      console.error('Error getting conversation list:', err);
     }
   });
 
