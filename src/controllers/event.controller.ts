@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import prisma from '../lib/prisma';
+import { Server, Socket } from 'socket.io';
 const moment = require('moment')().format('YYYY-MM-DD HH:mm:ss');
 
 async function createEvent(req: Request, res: Response) {
@@ -76,9 +77,76 @@ async function fetchEventDetail(req: any, res: Response) {
   }
 }
 
+async function checkIsRequested(req: any, res: Response) {
+  const { senderId, eventId } = req.body;
+  try {
+    const eventsRequests = await prisma.eventRequest
+      .findFirst({
+        where: {
+          eventId,
+          senderId,
+        },
+      })
+      .then((e) => {
+        console.log(e);
+        // console.log(eventsRequests, ': EVENTS');
+        if (eventsRequests !== null)
+          res.status(200).json({ status: 'ok', eventsRequests });
+        else res.status(200).json({ status: 'not' });
+      });
+  } catch (err) {
+    res.status(500).send(err);
+  }
+}
+
+function eventSocket(io: Server, socket: Socket) {
+  socket.on('fetchEventRequests', async (userId) => {
+    try {
+      const user = await prisma.user.findUnique({
+        where: {
+          id: userId,
+        },
+      });
+      if (user) socket.emit('fetchedEventRequests', user);
+    } catch (err) {
+      console.error('fetchEventRequests error : ', err);
+    }
+  });
+
+  socket.on('requestedEvents', async (data) => {
+    const { userId, eventId } = data;
+    try {
+      const events = await prisma.eventRequest.findMany({
+        where: {
+          eventId: eventId,
+          senderId: userId,
+        },
+      });
+      console.log(events);
+      socket.emit('fetchedRequestedEvent', events);
+    } catch (err) {}
+  });
+
+  socket.on('requestEvent', async (data) => {
+    try {
+      const request = await prisma.eventRequest.create({
+        data: {
+          eventId: data.event.id,
+          userId: data.event.userId,
+          senderId: data.senderId,
+        },
+      });
+    } catch (err) {
+      console.error('requestEvent error : ', err);
+    }
+  });
+}
+
 export default {
   createEvent,
   fetchEvents,
   fetchEventUser,
   fetchEventDetail,
+  eventSocket,
+  checkIsRequested,
 };

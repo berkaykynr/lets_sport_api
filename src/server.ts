@@ -5,6 +5,7 @@ import MessagesRouter from './routes/messages.route';
 import prisma from './lib/prisma';
 import messagesController from './controllers/messages.controller';
 import { Socket } from 'socket.io';
+import eventController from './controllers/event.controller';
 const http = require('http');
 const { Server } = require('socket.io');
 
@@ -36,6 +37,7 @@ async function main() {
   io.on('connection', (socket: Socket) => {
     console.log('a user connected', socket.id);
     messagesController.messageSocket(io, socket);
+    eventController.eventSocket(io, socket);
   });
 
   io.listen(3000);

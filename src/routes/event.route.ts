@@ -31,5 +31,9 @@ router.post(
   authenticateToken,
   EventController.fetchEventDetail
 );
-
+router.post(
+  '/checkIsRequested',
+  authenticateToken,
+  EventController.checkIsRequested
+);
 export default router;

@@ -10,29 +10,26 @@ datasource db {
 }
 
 model User {
-  id                String  @id @unique @default(cuid())
-  first_name        String
-  last_name         String
-  username          String  @unique
-  password          String
-  email             String  @unique
-  phone             String? @unique
-  address           String?
-  branches          Json?
-  sex               String?
-  profile_photo     String?
-  photos            String?
-  rate              Int?    @default(0)
-  birthyear         String?
-  resetPasswordCode String?
-  is_validated      Boolean @default(false)
-  is_premium        Boolean @default(false)
-  events            Event[]
-}
-
-model TurkeyAddress {
-  id   String @id @unique @default(cuid())
-  city Json?
+  id                    String         @id @unique @default(cuid())
+  first_name            String
+  last_name             String
+  username              String         @unique
+  password              String
+  email                 String         @unique
+  phone                 String?        @unique
+  address               String?
+  branches              Json?
+  sex                   String?
+  profile_photo         String?
+  photos                String?
+  rate                  Int?           @default(0)
+  birthyear             String?
+  resetPasswordCode     String?
+  is_validated          Boolean        @default(false)
+  is_premium            Boolean        @default(false)
+  events                Event[]
+  eventRequestsAsOwner  EventRequest[] @relation("EventOwner")
+  eventRequestsAsSender EventRequest[] @relation("SenderUser")
 }
 
 enum Branches {
@@ -64,13 +61,23 @@ model Event {
   updatedAt    DateTime? @updatedAt
   createdAt    DateTime? @default(now())
   participants Json?
-  owner        User      @relation(fields: [username], references: [id])
+  owner        User      @relation(fields: [userId], references: [id])
   latitude     String
   longitude    String
   address      String
   branch       String
   description  String?
-  username     String
+  userId       String
+}
+
+model EventRequest {
+  id         String  @id @unique @default(cuid())
+  eventOwner User?   @relation("EventOwner", fields: [userId], references: [id])
+  senderUser User?   @relation("SenderUser", fields: [senderId], references: [id])
+  eventId    String
+  userId     String
+  senderId   String
+  status     Boolean @default(false)
 }
 
 model Message {
