@@ -32,8 +32,16 @@ router.post(
   EventController.fetchEventDetail
 );
 router.post(
-  '/checkIsRequested',
+  '/checkIsRequestedEvent',
   authenticateToken,
-  EventController.checkIsRequested
+  EventController.checkIsRequestedEvent
 );
+
+router.post(
+  '/eventRequestIds',
+  authenticateToken,
+  EventController.eventRequestIds
+);
+
+router.post('/eventRequest', authenticateToken, EventController.eventRequest);
 export default router;

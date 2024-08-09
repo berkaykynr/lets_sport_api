@@ -77,7 +77,7 @@ async function fetchEventDetail(req: any, res: Response) {
   }
 }
 
-async function checkIsRequested(req: any, res: Response) {
+async function checkIsRequestedEvent(req: any, res: Response) {
   const { senderId, eventId } = req.body;
   try {
     const eventsRequests = await prisma.eventRequest
@@ -88,7 +88,6 @@ async function checkIsRequested(req: any, res: Response) {
         },
       })
       .then((e) => {
-        console.log(e);
         // console.log(eventsRequests, ': EVENTS');
         if (eventsRequests !== null)
           res.status(200).json({ status: 'ok', eventsRequests });
@@ -99,6 +98,43 @@ async function checkIsRequested(req: any, res: Response) {
   }
 }
 
+async function eventRequestIds(req: any, res: Response) {
+  const { userId } = req.body;
+  try {
+    const requests = await prisma.eventRequest.findMany({
+      where: {
+        senderId: userId,
+      },
+    });
+    let responseData: Array<string> = [];
+
+    if (requests) {
+      requests.map((item) => {
+        responseData.push(item.eventId);
+      });
+    }
+    res.status(200).send(responseData);
+  } catch (err: any) {
+    res.status(500).send(err);
+  }
+}
+
+async function eventRequest(req: any, res: Response) {
+  const { userId, event } = req.body;
+  try {
+    const requestEvent = await prisma.eventRequest.create({
+      data: {
+        eventId: event.id,
+        senderId: userId,
+        userId: event.userId,
+      },
+    });
+    console.log(requestEvent, ': eventRequest func');
+    if (requestEvent) res.send(200);
+  } catch (err) {
+    res.status(500).send(err);
+  }
+}
 function eventSocket(io: Server, socket: Socket) {
   socket.on('fetchEventRequests', async (userId) => {
     try {
@@ -122,7 +158,7 @@ function eventSocket(io: Server, socket: Socket) {
           senderId: userId,
         },
       });
-      console.log(events);
+      console.log(events, ' :requestedEvents socket');
       socket.emit('fetchedRequestedEvent', events);
     } catch (err) {}
   });
@@ -148,5 +184,7 @@ export default {
   fetchEventUser,
   fetchEventDetail,
   eventSocket,
-  checkIsRequested,
+  checkIsRequestedEvent,
+  eventRequestIds,
+  eventRequest,
 };
