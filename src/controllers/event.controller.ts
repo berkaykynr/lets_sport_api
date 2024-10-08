@@ -6,7 +6,6 @@ const moment = require('moment')().format('YYYY-MM-DD HH:mm:ss');
 async function createEvent(req: Request, res: Response) {
   try {
     const username = req.body.username;
-
     const user = await prisma.user.findUnique({
       where: {
         username: username,
@@ -160,7 +159,7 @@ function eventSocket(io: Server, socket: Socket) {
       });
       console.log(events, ' :requestedEvents socket');
       socket.emit('fetchedRequestedEvent', events);
-    } catch (err) {}
+    } catch (err) { }
   });
 
   socket.on('requestEvent', async (data) => {

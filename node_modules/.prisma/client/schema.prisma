@@ -1,11 +1,12 @@
 // schema.prisma
 
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
 }
 
 datasource db {
-  provider = "mysql"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -30,6 +31,8 @@ model User {
   events                Event[]
   eventRequestsAsOwner  EventRequest[] @relation("EventOwner")
   eventRequestsAsSender EventRequest[] @relation("SenderUser")
+  followers             User[]         @relation(name: "UserToUser")
+  follows               User[]         @relation(name: "UserToUser")
 }
 
 enum Branches {

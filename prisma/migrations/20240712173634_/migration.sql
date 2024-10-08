@@ -1,2 +1,0 @@
--- AlterTable
-ALTER TABLE `User` MODIFY `rate` INTEGER NULL DEFAULT 0;
