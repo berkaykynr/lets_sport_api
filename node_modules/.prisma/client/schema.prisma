@@ -81,6 +81,7 @@ model EventRequest {
   userId     String
   senderId   String
   status     Boolean @default(false)
+  response   Boolean @default(false)
 }
 
 model Message {

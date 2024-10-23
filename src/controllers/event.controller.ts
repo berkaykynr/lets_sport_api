@@ -1,7 +1,7 @@
-import { Request, Response } from 'express';
-import prisma from '../lib/prisma';
-import { Server, Socket } from 'socket.io';
-const moment = require('moment')().format('YYYY-MM-DD HH:mm:ss');
+import { Request, Response } from "express";
+import prisma from "../lib/prisma";
+import { Server, Socket } from "socket.io";
+const moment = require("moment")().format("YYYY-MM-DD HH:mm:ss");
 
 async function createEvent(req: Request, res: Response) {
   try {
@@ -12,7 +12,7 @@ async function createEvent(req: Request, res: Response) {
       },
     });
 
-    if (!user) return res.status(404).json({ error: 'User not found' });
+    if (!user) return res.status(404).json({ error: "User not found" });
 
     const event = await prisma.event.create({
       data: {
@@ -89,8 +89,8 @@ async function checkIsRequestedEvent(req: any, res: Response) {
       .then((e) => {
         // console.log(eventsRequests, ': EVENTS');
         if (eventsRequests !== null)
-          res.status(200).json({ status: 'ok', eventsRequests });
-        else res.status(200).json({ status: 'not' });
+          res.status(200).json({ status: "ok", eventsRequests });
+        else res.status(200).json({ status: "not" });
       });
   } catch (err) {
     res.status(500).send(err);
@@ -128,41 +128,88 @@ async function eventRequest(req: any, res: Response) {
         userId: event.userId,
       },
     });
-    console.log(requestEvent, ': eventRequest func');
+    console.log(requestEvent, ": eventRequest func");
     if (requestEvent) res.send(200);
   } catch (err) {
     res.status(500).send(err);
   }
 }
+
 function eventSocket(io: Server, socket: Socket) {
-  socket.on('fetchEventRequests', async (userId) => {
+  socket.on("fetchEventRequests", async (userId) => {
     try {
+      const requests = [];
+
       const user = await prisma.user.findUnique({
         where: {
           id: userId,
         },
       });
-      if (user) socket.emit('fetchedEventRequests', user);
+
+      const eventRequests = await prisma.eventRequest.findMany({
+        where: {
+          userId: userId,
+        },
+        include: {
+          eventOwner: true,
+        },
+      });
+
+      if (eventRequests)
+        eventRequests.map(async (item) => {
+          if (item.status == false && item.response == false) {
+            const event = await prisma.event.findUnique({
+              where: {
+                id: item.eventId,
+              },
+            });
+            const senderUser = await prisma.user.findUnique({
+              where: {
+                id: item.senderId,
+              },
+            });
+
+            console.log(
+              senderUser?.username,
+              " profil: ",
+              senderUser?.profile_photo,
+              " sex:",
+              senderUser?.sex,
+              " rate: ",
+              senderUser?.rate,
+              " addres: ",
+              senderUser?.address
+            );
+            console.log(event);
+          }
+
+          // requests.push({
+          // })
+        });
+
+      console.log(eventRequests);
+
+      if (user) socket.emit("fetchEventRequests", eventRequests);
     } catch (err) {
-      console.error('fetchEventRequests error : ', err);
+      console.error("fetchEventRequests error : ", err);
     }
   });
 
-  socket.on('requestedEvents', async (data) => {
-    const { userId, eventId } = data;
-    try {
-      const events = await prisma.eventRequest.findMany({
-        where: {
-          eventId: eventId,
-          senderId: userId,
-        },
-      });
-      console.log(events, ' :requestedEvents socket');
-      socket.emit('fetchedRequestedEvent', events);
-    } catch (err) { }
-  });
+  // socket.on('requestedEvents', async (data) => {
+  //   const { userId, eventId } = data;
+  //   try {
+  //     const events = await prisma.eventRequest.findMany({
+  //       where: {
+  //         eventId: eventId,
+  //         senderId: userId,
+  //       },
+  //     });
+  //     console.log(events, ' :requestedEvents socket');
+  //     socket.emit('fetchedRequestedEvent', events);
+  //   } catch (err) { }
+  // });
 
-  socket.on('requestEvent', async (data) => {
+  socket.on("requestEvent", async (data) => {
     try {
       const request = await prisma.eventRequest.create({
         data: {
@@ -172,7 +219,7 @@ function eventSocket(io: Server, socket: Socket) {
         },
       });
     } catch (err) {
-      console.error('requestEvent error : ', err);
+      console.error("requestEvent error : ", err);
     }
   });
 }
